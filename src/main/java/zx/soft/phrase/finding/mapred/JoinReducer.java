@@ -7,12 +7,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /**
- * @author Shannon Quinn
- *
  * Pulls together all the counts for a single phrase. Rather tricky. The key
  * is a unigram, but the list of values will contain both the unigram counts
- * AND the counts for that term within each bigram for which it is a 
- * constituent.
+ * AND the counts for that term within each bigram for which it is a constituent.
+ * 
+ * @author wgybzb
+ *
  */
 public class JoinReducer extends Reducer<Text, Text, Text, Text> {
 

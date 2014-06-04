@@ -7,10 +7,11 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
 /**
- * @author Shannon Quinn
- * 
  * Accumulates counts for terms and saves unigrams and bigrams to different
  * output paths so they can be examined independently later.
+ * 
+ * @author wgybzb
+ *
  */
 public class CountReducer extends Reducer<Text, Text, Text, Text> {
 
@@ -37,7 +38,7 @@ public class CountReducer extends Reducer<Text, Text, Text, Text> {
 			String[] elements = value.toString().split(":");
 			String type = elements[0];
 			long count = Long.parseLong(elements[1]);
-			if (type.equals(PhrasesController.FOREGROUND)) {
+			if (type.equals(PhrasesFinding.FOREGROUND)) {
 				fgCount += count;
 			} else {
 				bgCount += count;
@@ -46,21 +47,21 @@ public class CountReducer extends Reducer<Text, Text, Text, Text> {
 
 		// Bigram.
 		if (bgCount > 0 && grams.length == 2) {
-			context.getCounter(PhrasesController.PHRASE_COUNTERS.BG_PHRASEVOCAB).increment(1);
+			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_PHRASEVOCAB).increment(1);
 		}
 		if (fgCount > 0 && grams.length == 2) {
-			context.getCounter(PhrasesController.PHRASE_COUNTERS.FG_PHRASEVOCAB).increment(1);
+			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_PHRASEVOCAB).increment(1);
 		}
 		// Unigram.
 		if (bgCount > 0 && grams.length == 1) {
-			context.getCounter(PhrasesController.PHRASE_COUNTERS.BG_WORDVOCAB).increment(1);
+			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_WORDVOCAB).increment(1);
 		}
 		if (fgCount > 0 && grams.length == 1) {
-			context.getCounter(PhrasesController.PHRASE_COUNTERS.FG_WORDVOCAB).increment(1);
+			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_WORDVOCAB).increment(1);
 		}
 
 		// Write the output. Name it according to whether it is unigram or bigram.
-		mos.write((grams.length == 2 ? PhrasesController.BIGRAM : PhrasesController.UNIGRAM), key,
+		mos.write((grams.length == 2 ? PhrasesFinding.BIGRAM : PhrasesFinding.UNIGRAM), key,
 				new Text(String.format("%s,%s", bgCount, fgCount)));
 	}
 

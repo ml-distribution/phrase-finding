@@ -25,25 +25,26 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- * @author Shannon Quinn
+ * 
+ * @author wgybzb
  *
  */
-public class PhrasesController extends Configured implements Tool {
+public class PhrasesFinding extends Configured implements Tool {
 
 	static enum PHRASE_COUNTERS {
 		BG_TOTALWORDS, BG_TOTALPHRASES, BG_WORDVOCAB, BG_PHRASEVOCAB, FG_TOTALWORDS, FG_TOTALPHRASES, FG_WORDVOCAB, FG_PHRASEVOCAB
 	}
 
-	public static final String BG_TOTALWORDS = "edu.cmu.bigdata.shannon.bg_totalwords";
-	public static final String BG_TOTALPHRASES = "edu.cmu.bigdata.shannon.bg_totalphrases";
-	public static final String BG_WORDVOCAB = "edu.cmu.bigdata.shannon.bg_wordvocab";
-	public static final String BG_PHRASEVOCAB = "edu.cmu.bigdata.shannon.bg_phrasevocab";
-	public static final String FG_TOTALWORDS = "edu.cmu.bigdata.shannon.fg_totalwords";
-	public static final String FG_TOTALPHRASES = "edu.cmu.bigdata.shannon.fg_totalphrases";
-	public static final String FG_WORDVOCAB = "edu.cmu.bigdata.shannon.fg_wordvocab";
-	public static final String FG_PHRASEVOCAB = "edu.cmu.bigdata.shannon.fg_phrasevocab";
+	public static final String BG_TOTALWORDS = "phrase.finding.bg_totalwords";
+	public static final String BG_TOTALPHRASES = "phrase.finding.bg_totalphrases";
+	public static final String BG_WORDVOCAB = "phrase.finding.bg_wordvocab";
+	public static final String BG_PHRASEVOCAB = "phrase.finding.bg_phrasevocab";
+	public static final String FG_TOTALWORDS = "phrase.finding.fg_totalwords";
+	public static final String FG_TOTALPHRASES = "phrase.finding.fg_totalphrases";
+	public static final String FG_WORDVOCAB = "phrase.finding.fg_wordvocab";
+	public static final String FG_PHRASEVOCAB = "phrase.finding.fg_phrasevocab";
 
-	public static final String BG_CUTOFF = "edu.cmu.bigdata.shannon.bg_cutoff";
+	public static final String BG_CUTOFF = "phrase.finding.bg_cutoff";
 
 	public static final String UNIGRAM = "unigram";
 	public static final String BIGRAM = "bigram";
@@ -74,11 +75,11 @@ public class PhrasesController extends Configured implements Tool {
 	 */
 	public void add(double score, String value) {
 		Double key = new Double(score);
-		if (scores.floorKey(key) != null || scores.size() < PhrasesController.NUMBEST) {
+		if (scores.floorKey(key) != null || scores.size() < PhrasesFinding.NUMBEST) {
 			scores.put(key, value);
 
 			// We've added something. Do we need to kick something out?
-			if (scores.size() > PhrasesController.NUMBEST) {
+			if (scores.size() > PhrasesFinding.NUMBEST) {
 				scores.remove(scores.firstKey());
 			}
 		}
@@ -100,9 +101,9 @@ public class PhrasesController extends Configured implements Tool {
 		Path join = new Path(output.getParent(), "join");
 
 		// Job 1: Determine foreground and background counts.
-		PhrasesController.delete(conf, counts);
+		PhrasesFinding.delete(conf, counts);
 		Job countJob = new Job(conf, "shannon-phrases-count");
-		countJob.setJarByClass(PhrasesController.class);
+		countJob.setJarByClass(PhrasesFinding.class);
 		countJob.setNumReduceTasks(numReducers);
 		countJob.setMapperClass(InputDataMapper.class);
 		countJob.setReducerClass(CountReducer.class);
@@ -118,9 +119,9 @@ public class PhrasesController extends Configured implements Tool {
 		FileInputFormat.addInputPath(countJob, unigram);
 		FileInputFormat.addInputPath(countJob, bigram);
 		FileOutputFormat.setOutputPath(countJob, counts);
-		MultipleOutputs.addNamedOutput(countJob, PhrasesController.UNIGRAM, TextOutputFormat.class, Text.class,
+		MultipleOutputs.addNamedOutput(countJob, PhrasesFinding.UNIGRAM, TextOutputFormat.class, Text.class,
 				Text.class);
-		MultipleOutputs.addNamedOutput(countJob, PhrasesController.BIGRAM, TextOutputFormat.class, Text.class,
+		MultipleOutputs.addNamedOutput(countJob, PhrasesFinding.BIGRAM, TextOutputFormat.class, Text.class,
 				Text.class);
 
 		if (!countJob.waitForCompletion(true)) {
@@ -129,29 +130,29 @@ public class PhrasesController extends Configured implements Tool {
 		}
 
 		// Extract all the counters.
-		calculateConf.setLong(PhrasesController.BG_PHRASEVOCAB,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.BG_PHRASEVOCAB).getValue());
-		calculateConf.setLong(PhrasesController.BG_WORDVOCAB,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.BG_WORDVOCAB).getValue());
-		calculateConf.setLong(PhrasesController.BG_TOTALPHRASES,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.BG_TOTALPHRASES).getValue());
-		calculateConf.setLong(PhrasesController.BG_TOTALWORDS,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.BG_TOTALWORDS).getValue());
-		calculateConf.setLong(PhrasesController.FG_PHRASEVOCAB,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.FG_PHRASEVOCAB).getValue());
-		calculateConf.setLong(PhrasesController.FG_WORDVOCAB,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.FG_WORDVOCAB).getValue());
-		calculateConf.setLong(PhrasesController.FG_TOTALPHRASES,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.FG_TOTALPHRASES).getValue());
-		calculateConf.setLong(PhrasesController.FG_TOTALWORDS,
-				countJob.getCounters().findCounter(PhrasesController.PHRASE_COUNTERS.FG_TOTALWORDS).getValue());
+		calculateConf.setLong(PhrasesFinding.BG_PHRASEVOCAB,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_PHRASEVOCAB).getValue());
+		calculateConf.setLong(PhrasesFinding.BG_WORDVOCAB,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_WORDVOCAB).getValue());
+		calculateConf.setLong(PhrasesFinding.BG_TOTALPHRASES,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALPHRASES).getValue());
+		calculateConf.setLong(PhrasesFinding.BG_TOTALWORDS,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALWORDS).getValue());
+		calculateConf.setLong(PhrasesFinding.FG_PHRASEVOCAB,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_PHRASEVOCAB).getValue());
+		calculateConf.setLong(PhrasesFinding.FG_WORDVOCAB,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_WORDVOCAB).getValue());
+		calculateConf.setLong(PhrasesFinding.FG_TOTALPHRASES,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALPHRASES).getValue());
+		calculateConf.setLong(PhrasesFinding.FG_TOTALWORDS,
+				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALWORDS).getValue());
 
 		// Job 2: Join the counts across terms.
-		PhrasesController.delete(conf, join);
-		Path bigramInput = new Path(counts, PhrasesController.BIGRAM + "*");
-		Path unigramInput = new Path(counts, PhrasesController.UNIGRAM + "*");
+		PhrasesFinding.delete(conf, join);
+		Path bigramInput = new Path(counts, PhrasesFinding.BIGRAM + "*");
+		Path unigramInput = new Path(counts, PhrasesFinding.UNIGRAM + "*");
 		Job joinJob = new Job(conf, "shannon-phrases-join");
-		joinJob.setJarByClass(PhrasesController.class);
+		joinJob.setJarByClass(PhrasesFinding.class);
 		joinJob.setNumReduceTasks(numReducers);
 		MultipleInputs.addInputPath(joinJob, unigramInput, KeyValueTextInputFormat.class, IdentityJoinMapper.class);
 		MultipleInputs.addInputPath(joinJob, bigramInput, KeyValueTextInputFormat.class, JoinBigramMapper.class);
@@ -171,9 +172,9 @@ public class PhrasesController extends Configured implements Tool {
 
 		// Job 3: Mostly a continuation of Job 2. We now have 2 sets of counts
 		// for each bigram; we need to unify them.
-		PhrasesController.delete(calculateConf, output);
+		PhrasesFinding.delete(calculateConf, output);
 		Job calculateJob = new Job(calculateConf, "shannon-phrases-calculate");
-		calculateJob.setJarByClass(PhrasesController.class);
+		calculateJob.setJarByClass(PhrasesFinding.class);
 		calculateJob.setNumReduceTasks(1); // forces a single output file
 		calculateJob.setMapperClass(IdentityJoinMapper.class);
 		calculateJob.setReducerClass(CalculateReducer.class);
@@ -224,7 +225,7 @@ public class PhrasesController extends Configured implements Tool {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		System.exit(ToolRunner.run(new PhrasesController(), args));
+		System.exit(ToolRunner.run(new PhrasesFinding(), args));
 	}
 
 }

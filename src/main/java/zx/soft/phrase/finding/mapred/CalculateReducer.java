@@ -8,9 +8,10 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /**
- * @author Shannon Quinn
- *
  * Calculate phraseness and informativeness.
+ * 
+ * @author wgybzb
+ *
  */
 public class CalculateReducer extends Reducer<Text, Text, DoubleWritable, Text> {
 
@@ -79,12 +80,12 @@ public class CalculateReducer extends Reducer<Text, Text, DoubleWritable, Text> 
 
 		// Make the computation.
 		Configuration conf = context.getConfiguration();
-		long fgTotalPhrases = conf.getLong(PhrasesController.FG_TOTALPHRASES, 0);
-		long fgPhraseVocab = conf.getLong(PhrasesController.FG_PHRASEVOCAB, 0);
-		long fgTotalWords = conf.getLong(PhrasesController.FG_TOTALWORDS, 0);
-		long fgWordVocab = conf.getLong(PhrasesController.FG_WORDVOCAB, 0);
-		long bgTotalPhrases = conf.getLong(PhrasesController.BG_TOTALPHRASES, 0);
-		long bgPhraseVocab = conf.getLong(PhrasesController.BG_PHRASEVOCAB, 0);
+		long fgTotalPhrases = conf.getLong(PhrasesFinding.FG_TOTALPHRASES, 0);
+		long fgPhraseVocab = conf.getLong(PhrasesFinding.FG_PHRASEVOCAB, 0);
+		long fgTotalWords = conf.getLong(PhrasesFinding.FG_TOTALWORDS, 0);
+		long fgWordVocab = conf.getLong(PhrasesFinding.FG_WORDVOCAB, 0);
+		long bgTotalPhrases = conf.getLong(PhrasesFinding.BG_TOTALPHRASES, 0);
+		long bgPhraseVocab = conf.getLong(PhrasesFinding.BG_PHRASEVOCAB, 0);
 		double phraseness = CalculateReducer.phraseness(Cxy, Cx, Cy, fgTotalPhrases, fgPhraseVocab, fgTotalWords,
 				fgWordVocab);
 

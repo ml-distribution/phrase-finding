@@ -1,4 +1,4 @@
-HW4b: Phrase Finding on Hadoop
+Phrase Finding基本实现以及分布式实现
 ===========================
 
 This is a colleciton of Java files using the Hadoop framework to build a 
@@ -10,16 +10,6 @@ joins the unigram and bigram counts together, and the third computes the
 "phraseness" and "informativeness" statistics that are used to identify the
 most meaningful phrases.
 
-To create the .jar archive:
-
-    javac *.java
-    jar cfm PhraseFinding.jar Manifest.txt *.class
-
-*By specifying some `Manifest.txt` file, you can point Java--and hence, Hadoop--to
-the class with the `main` method. Just include the following line (followed by
-a newline) in the text file:*
-
-    Main-Class: Package.ClassName
 
 To run the job:
 

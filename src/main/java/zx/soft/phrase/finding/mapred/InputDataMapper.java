@@ -7,10 +7,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * @author Shannon Quinn
- *
  * Reads a line from the data files. It's fairly trivial to tell the differnece
  * between bigrams and unigrams, so we only need one mapper to consider them both.
+ * 
+ * @author wgybzb
+ *
  */
 public class InputDataMapper extends Mapper<LongWritable, Text, Text, Text> {
 
@@ -18,7 +19,7 @@ public class InputDataMapper extends Mapper<LongWritable, Text, Text, Text> {
 
 	@Override
 	public void setup(Context context) {
-		bgCutoff = context.getConfiguration().getInt(PhrasesController.BG_CUTOFF, 1970);
+		bgCutoff = context.getConfiguration().getInt(PhrasesFinding.BG_CUTOFF, 1970);
 	}
 
 	@Override
@@ -33,19 +34,19 @@ public class InputDataMapper extends Mapper<LongWritable, Text, Text, Text> {
 		String type = null;
 		if (decade < bgCutoff) { // yes: BEFORE 1970 is the CORPUS, AFTER is the BACKGROUND
 			// Foreground.
-			type = PhrasesController.FOREGROUND;
+			type = PhrasesFinding.FOREGROUND;
 			if (isBigram) {
-				context.getCounter(PhrasesController.PHRASE_COUNTERS.FG_TOTALPHRASES).increment(count);
+				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALPHRASES).increment(count);
 			} else {
-				context.getCounter(PhrasesController.PHRASE_COUNTERS.FG_TOTALWORDS).increment(count);
+				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALWORDS).increment(count);
 			}
 		} else {
 			// Background.
-			type = PhrasesController.BACKGROUND;
+			type = PhrasesFinding.BACKGROUND;
 			if (isBigram) {
-				context.getCounter(PhrasesController.PHRASE_COUNTERS.BG_TOTALPHRASES).increment(count);
+				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALPHRASES).increment(count);
 			} else {
-				context.getCounter(PhrasesController.PHRASE_COUNTERS.BG_TOTALWORDS).increment(count);
+				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALWORDS).increment(count);
 			}
 		}
 

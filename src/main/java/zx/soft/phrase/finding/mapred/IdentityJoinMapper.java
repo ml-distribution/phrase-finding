@@ -6,10 +6,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * @author Shannon Quinn
- * 
  * Essentially the identity mapper. Passes the key (unigram) and value 
  * (background and foreground counts) on to the reducer.
+ * 
+ * @author wgybzb
+ *
  */
 public class IdentityJoinMapper extends Mapper<Text, Text, Text, Text> {
 

@@ -6,10 +6,11 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * @author Shannon Quinn
- * 
  * Reprocesses the bigram data so the keys are the unigram terms, but the 
  * values include the bigram data so they can be reconstructed in the Reducer.
+ * 
+ * @author wgybzb
+ *
  */
 public class JoinBigramMapper extends Mapper<Text, Text, Text, Text> {
 
