@@ -1,7 +1,6 @@
 package zx.soft.phrase.finding.mapred;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.NavigableSet;
 import java.util.TreeMap;
@@ -24,62 +23,27 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import zx.soft.phrase.finding.utils.HDFSUtils;
+
 /**
+ * Phrase-Finding分布式实现主类
  * 
  * @author wgybzb
  *
  */
-public class PhrasesFinding extends Configured implements Tool {
-
-	static enum PHRASE_COUNTERS {
-		BG_TOTALWORDS, BG_TOTALPHRASES, BG_WORDVOCAB, BG_PHRASEVOCAB, FG_TOTALWORDS, FG_TOTALPHRASES, FG_WORDVOCAB, FG_PHRASEVOCAB
-	}
-
-	public static final String BG_TOTALWORDS = "phrase.finding.bg_totalwords";
-	public static final String BG_TOTALPHRASES = "phrase.finding.bg_totalphrases";
-	public static final String BG_WORDVOCAB = "phrase.finding.bg_wordvocab";
-	public static final String BG_PHRASEVOCAB = "phrase.finding.bg_phrasevocab";
-	public static final String FG_TOTALWORDS = "phrase.finding.fg_totalwords";
-	public static final String FG_TOTALPHRASES = "phrase.finding.fg_totalphrases";
-	public static final String FG_WORDVOCAB = "phrase.finding.fg_wordvocab";
-	public static final String FG_PHRASEVOCAB = "phrase.finding.fg_phrasevocab";
-
-	public static final String BG_CUTOFF = "phrase.finding.bg_cutoff";
-
-	public static final String UNIGRAM = "unigram";
-	public static final String BIGRAM = "bigram";
-	public static final String FOREGROUND = "FG";
-	public static final String BACKGROUND = "BG";
-
-	public static final int NUMBEST = 20;
+public class PhrasesFindingDistribute extends Configured implements Tool {
 
 	private TreeMap<Double, String> scores;
 
 	/**
-	 * Deletes the specified path from HDFS so we can run this multiple times.
-	 * @param conf
-	 * @param path
-	 */
-	public static void delete(Configuration conf, Path path) throws IOException {
-		FileSystem fs = path.getFileSystem(conf);
-		if (fs.exists(path)) {
-			fs.delete(path, true);
-		}
-	}
-
-	/**
 	 * Handles organizing the final results to find the top 20 phrases.
-	 * 
-	 * @param score
-	 * @param value
 	 */
 	public void add(double score, String value) {
 		Double key = new Double(score);
-		if (scores.floorKey(key) != null || scores.size() < PhrasesFinding.NUMBEST) {
+		if (scores.floorKey(key) != null || scores.size() < PhraseFindingConstant.NUMBEST) {
 			scores.put(key, value);
-
 			// We've added something. Do we need to kick something out?
-			if (scores.size() > PhrasesFinding.NUMBEST) {
+			if (scores.size() > PhraseFindingConstant.NUMBEST) {
 				scores.remove(scores.firstKey());
 			}
 		}
@@ -101,9 +65,9 @@ public class PhrasesFinding extends Configured implements Tool {
 		Path join = new Path(output.getParent(), "join");
 
 		// Job 1: Determine foreground and background counts.
-		PhrasesFinding.delete(conf, counts);
+		HDFSUtils.delete(conf, counts);
 		Job countJob = new Job(conf, "shannon-phrases-count");
-		countJob.setJarByClass(PhrasesFinding.class);
+		countJob.setJarByClass(PhrasesFindingDistribute.class);
 		countJob.setNumReduceTasks(numReducers);
 		countJob.setMapperClass(InputDataMapper.class);
 		countJob.setReducerClass(CountReducer.class);
@@ -119,9 +83,9 @@ public class PhrasesFinding extends Configured implements Tool {
 		FileInputFormat.addInputPath(countJob, unigram);
 		FileInputFormat.addInputPath(countJob, bigram);
 		FileOutputFormat.setOutputPath(countJob, counts);
-		MultipleOutputs.addNamedOutput(countJob, PhrasesFinding.UNIGRAM, TextOutputFormat.class, Text.class,
+		MultipleOutputs.addNamedOutput(countJob, PhraseFindingConstant.UNIGRAM, TextOutputFormat.class, Text.class,
 				Text.class);
-		MultipleOutputs.addNamedOutput(countJob, PhrasesFinding.BIGRAM, TextOutputFormat.class, Text.class,
+		MultipleOutputs.addNamedOutput(countJob, PhraseFindingConstant.BIGRAM, TextOutputFormat.class, Text.class,
 				Text.class);
 
 		if (!countJob.waitForCompletion(true)) {
@@ -130,29 +94,29 @@ public class PhrasesFinding extends Configured implements Tool {
 		}
 
 		// Extract all the counters.
-		calculateConf.setLong(PhrasesFinding.BG_PHRASEVOCAB,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_PHRASEVOCAB).getValue());
-		calculateConf.setLong(PhrasesFinding.BG_WORDVOCAB,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_WORDVOCAB).getValue());
-		calculateConf.setLong(PhrasesFinding.BG_TOTALPHRASES,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALPHRASES).getValue());
-		calculateConf.setLong(PhrasesFinding.BG_TOTALWORDS,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALWORDS).getValue());
-		calculateConf.setLong(PhrasesFinding.FG_PHRASEVOCAB,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_PHRASEVOCAB).getValue());
-		calculateConf.setLong(PhrasesFinding.FG_WORDVOCAB,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_WORDVOCAB).getValue());
-		calculateConf.setLong(PhrasesFinding.FG_TOTALPHRASES,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALPHRASES).getValue());
-		calculateConf.setLong(PhrasesFinding.FG_TOTALWORDS,
-				countJob.getCounters().findCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALWORDS).getValue());
+		calculateConf.setLong(PhraseFindingConstant.BG_PHRASE_VOCAB,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_PHRASE_VOCAB).getValue());
+		calculateConf.setLong(PhraseFindingConstant.BG_WORD_VOCAB,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_WORD_VOCAB).getValue());
+		calculateConf.setLong(PhraseFindingConstant.BG_TOTAL_PHRASES,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_TOTAL_PHRASES).getValue());
+		calculateConf.setLong(PhraseFindingConstant.BG_TOTAL_WORDS,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_TOTAL_WORDS).getValue());
+		calculateConf.setLong(PhraseFindingConstant.FG_PHRASE_VOCAB,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_PHRASE_VOCAB).getValue());
+		calculateConf.setLong(PhraseFindingConstant.FG_WORD_VOCAB,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_WORD_VOCAB).getValue());
+		calculateConf.setLong(PhraseFindingConstant.FG_TOTAL_PHRASES,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_TOTAL_PHRASES).getValue());
+		calculateConf.setLong(PhraseFindingConstant.FG_TOTAL_WORDS,
+				countJob.getCounters().findCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_TOTAL_WORDS).getValue());
 
 		// Job 2: Join the counts across terms.
-		PhrasesFinding.delete(conf, join);
-		Path bigramInput = new Path(counts, PhrasesFinding.BIGRAM + "*");
-		Path unigramInput = new Path(counts, PhrasesFinding.UNIGRAM + "*");
+		HDFSUtils.delete(conf, join);
+		Path bigramInput = new Path(counts, PhraseFindingConstant.BIGRAM + "*");
+		Path unigramInput = new Path(counts, PhraseFindingConstant.UNIGRAM + "*");
 		Job joinJob = new Job(conf, "shannon-phrases-join");
-		joinJob.setJarByClass(PhrasesFinding.class);
+		joinJob.setJarByClass(PhrasesFindingDistribute.class);
 		joinJob.setNumReduceTasks(numReducers);
 		MultipleInputs.addInputPath(joinJob, unigramInput, KeyValueTextInputFormat.class, IdentityJoinMapper.class);
 		MultipleInputs.addInputPath(joinJob, bigramInput, KeyValueTextInputFormat.class, JoinBigramMapper.class);
@@ -172,9 +136,9 @@ public class PhrasesFinding extends Configured implements Tool {
 
 		// Job 3: Mostly a continuation of Job 2. We now have 2 sets of counts
 		// for each bigram; we need to unify them.
-		PhrasesFinding.delete(calculateConf, output);
+		HDFSUtils.delete(calculateConf, output);
 		Job calculateJob = new Job(calculateConf, "shannon-phrases-calculate");
-		calculateJob.setJarByClass(PhrasesFinding.class);
+		calculateJob.setJarByClass(PhrasesFindingDistribute.class);
 		calculateJob.setNumReduceTasks(1); // forces a single output file
 		calculateJob.setMapperClass(IdentityJoinMapper.class);
 		calculateJob.setReducerClass(CalculateReducer.class);
@@ -222,10 +186,10 @@ public class PhrasesFinding extends Configured implements Tool {
 	}
 
 	/**
-	 * @param args
+	 * 主函数
 	 */
 	public static void main(String[] args) throws Exception {
-		System.exit(ToolRunner.run(new PhrasesFinding(), args));
+		System.exit(ToolRunner.run(new PhrasesFindingDistribute(), args));
 	}
 
 }

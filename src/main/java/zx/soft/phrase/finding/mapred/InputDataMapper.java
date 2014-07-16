@@ -19,7 +19,7 @@ public class InputDataMapper extends Mapper<LongWritable, Text, Text, Text> {
 
 	@Override
 	public void setup(Context context) {
-		bgCutoff = context.getConfiguration().getInt(PhrasesFinding.BG_CUTOFF, 1970);
+		bgCutoff = context.getConfiguration().getInt(PhraseFindingConstant.BG_CUTOFF, 1970);
 	}
 
 	@Override
@@ -34,19 +34,19 @@ public class InputDataMapper extends Mapper<LongWritable, Text, Text, Text> {
 		String type = null;
 		if (decade < bgCutoff) { // yes: BEFORE 1970 is the CORPUS, AFTER is the BACKGROUND
 			// Foreground.
-			type = PhrasesFinding.FOREGROUND;
+			type = PhraseFindingConstant.FORE_GROUND;
 			if (isBigram) {
-				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALPHRASES).increment(count);
+				context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_TOTAL_PHRASES).increment(count);
 			} else {
-				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_TOTALWORDS).increment(count);
+				context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_TOTAL_WORDS).increment(count);
 			}
 		} else {
 			// Background.
-			type = PhrasesFinding.BACKGROUND;
+			type = PhraseFindingConstant.BACK_GROUND;
 			if (isBigram) {
-				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALPHRASES).increment(count);
+				context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_TOTAL_PHRASES).increment(count);
 			} else {
-				context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_TOTALWORDS).increment(count);
+				context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_TOTAL_WORDS).increment(count);
 			}
 		}
 

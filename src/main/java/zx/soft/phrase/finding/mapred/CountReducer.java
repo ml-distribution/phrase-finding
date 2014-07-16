@@ -38,7 +38,7 @@ public class CountReducer extends Reducer<Text, Text, Text, Text> {
 			String[] elements = value.toString().split(":");
 			String type = elements[0];
 			long count = Long.parseLong(elements[1]);
-			if (type.equals(PhrasesFinding.FOREGROUND)) {
+			if (type.equals(PhraseFindingConstant.FORE_GROUND)) {
 				fgCount += count;
 			} else {
 				bgCount += count;
@@ -47,22 +47,22 @@ public class CountReducer extends Reducer<Text, Text, Text, Text> {
 
 		// Bigram.
 		if (bgCount > 0 && grams.length == 2) {
-			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_PHRASEVOCAB).increment(1);
+			context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_PHRASE_VOCAB).increment(1);
 		}
 		if (fgCount > 0 && grams.length == 2) {
-			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_PHRASEVOCAB).increment(1);
+			context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_PHRASE_VOCAB).increment(1);
 		}
 		// Unigram.
 		if (bgCount > 0 && grams.length == 1) {
-			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.BG_WORDVOCAB).increment(1);
+			context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.BG_WORD_VOCAB).increment(1);
 		}
 		if (fgCount > 0 && grams.length == 1) {
-			context.getCounter(PhrasesFinding.PHRASE_COUNTERS.FG_WORDVOCAB).increment(1);
+			context.getCounter(PhraseFindingConstant.PHRASE_COUNTERS.FG_WORD_VOCAB).increment(1);
 		}
 
 		// Write the output. Name it according to whether it is unigram or bigram.
-		mos.write((grams.length == 2 ? PhrasesFinding.BIGRAM : PhrasesFinding.UNIGRAM), key,
-				new Text(String.format("%s,%s", bgCount, fgCount)));
+		mos.write((grams.length == 2 ? PhraseFindingConstant.BIGRAM : PhraseFindingConstant.UNIGRAM), key, new Text(
+				String.format("%s,%s", bgCount, fgCount)));
 	}
 
 }

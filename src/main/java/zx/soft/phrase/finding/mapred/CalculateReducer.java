@@ -80,12 +80,12 @@ public class CalculateReducer extends Reducer<Text, Text, DoubleWritable, Text> 
 
 		// Make the computation.
 		Configuration conf = context.getConfiguration();
-		long fgTotalPhrases = conf.getLong(PhrasesFinding.FG_TOTALPHRASES, 0);
-		long fgPhraseVocab = conf.getLong(PhrasesFinding.FG_PHRASEVOCAB, 0);
-		long fgTotalWords = conf.getLong(PhrasesFinding.FG_TOTALWORDS, 0);
-		long fgWordVocab = conf.getLong(PhrasesFinding.FG_WORDVOCAB, 0);
-		long bgTotalPhrases = conf.getLong(PhrasesFinding.BG_TOTALPHRASES, 0);
-		long bgPhraseVocab = conf.getLong(PhrasesFinding.BG_PHRASEVOCAB, 0);
+		long fgTotalPhrases = conf.getLong(PhraseFindingConstant.FG_TOTAL_PHRASES, 0);
+		long fgPhraseVocab = conf.getLong(PhraseFindingConstant.FG_PHRASE_VOCAB, 0);
+		long fgTotalWords = conf.getLong(PhraseFindingConstant.FG_TOTAL_WORDS, 0);
+		long fgWordVocab = conf.getLong(PhraseFindingConstant.FG_WORD_VOCAB, 0);
+		long bgTotalPhrases = conf.getLong(PhraseFindingConstant.BG_TOTAL_PHRASES, 0);
+		long bgPhraseVocab = conf.getLong(PhraseFindingConstant.BG_PHRASE_VOCAB, 0);
 		double phraseness = CalculateReducer.phraseness(Cxy, Cx, Cy, fgTotalPhrases, fgPhraseVocab, fgTotalWords,
 				fgWordVocab);
 
